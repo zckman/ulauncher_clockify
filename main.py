@@ -156,15 +156,31 @@ class ItemEventListener(EventListener):
             raise RuntimeError(f"Failed to create tag '{name}'; Error: {response.status_code}")
 
     def get_project_id_by_name(self, name):
-        
         response = requests.get(f"{self.__base_workspace_url}/projects?name={name}", headers=self.__headers)
         data = json.loads(response.content.decode('utf-8'))
 
         if response.status_code == 200:
-            print(data[0])
-            return data[0]['id'] if len(data) > 0 else None
+            if len(data) > 0:
+                print(data[0])
+                return data[0]['id']
+            else:
+                # Project does not exist, create a new project
+                create_project_url = f"{self.__base_workspace_url}/projects"
+                create_project_payload = {
+                    "name": name,
+                    # Add any additional parameters you need for project creation
+                }
+                create_project_response = requests.post(create_project_url, headers=self.__headers, json=create_project_payload)
+
+                if create_project_response.status_code == 201:
+                    created_project_data = json.loads(create_project_response.content.decode('utf-8'))
+                    print(created_project_data)
+                    return created_project_data['id']
+                else:
+                    raise RuntimeError(f"Failed to create project with name '{name}'; Error: {create_project_response.status_code}")
         else:
             raise RuntimeError(f"Failed to get project id by name '{name}'; Error: {response.status_code}")
+
 
     def extract_project(self, message):
         reg_exp = "(?<!\\\)@([\w\-_]+)\s?"
