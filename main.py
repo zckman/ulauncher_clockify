@@ -175,6 +175,7 @@ class ItemEventListener(EventListener):
                 if create_project_response.status_code == 201:
                     created_project_data = json.loads(create_project_response.content.decode('utf-8'))
                     print(created_project_data)
+                    self.notification_action('Created project', f"Created project '{name}'", 'status')
                     return created_project_data['id']
                 else:
                     raise RuntimeError(f"Failed to create project with name '{name}'; Error: {create_project_response.status_code}")
